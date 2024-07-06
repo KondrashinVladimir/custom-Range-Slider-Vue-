@@ -2,7 +2,7 @@
   <div class="slider">
     <slot name="left"></slot>
 
-    <div class="slider__container" @mousedown="startDrag" @touchstart.prevent="startDrag" @mousemove="moveHandle"
+    <div class="slider__container" @mousedown="startDrag" @touchstart="startDrag" @mousemove="moveHandle"
       @touchmove="moveHandle" @mouseup="endDrag" @touchend="endDrag" ref="sliderContainer">
       <div class="slider__track" :style="trackStyle" ref="track"></div>
       <div class="slider__handle" :style="{ left: volume + '%' }" ref="handle"></div>
@@ -36,6 +36,11 @@ export default {
       };
     },
   },
+  watch: {
+    modelValue(newValue) {
+      this.volume = newValue;
+    },
+  },
   mounted() {
     this.updateSliderDimensions();
     window.addEventListener('resize', this.updateSliderDimensions);
@@ -44,7 +49,7 @@ export default {
     window.addEventListener('mouseup', this.stopDrag);
     window.addEventListener('touchend', this.stopDrag);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('resize', this.updateSliderDimensions);
     window.removeEventListener('mousemove', this.moveHandle);
     window.removeEventListener('touchmove', this.moveHandle);
@@ -57,26 +62,30 @@ export default {
       this.sliderRect = this.$refs.sliderContainer.getBoundingClientRect();
     },
     startDrag(event) {
+      event.stopPropagation();
       this.dragging = true;
       this.moveHandle(event);
     },
     moveHandle(event) {
       if (this.dragging) {
-        const newPosition = (event.clientX - this.sliderRect.left) / this.sliderWidth * 100;
+        const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
+        const newPosition = (clientX - this.sliderRect.left) / this.sliderWidth * 100;
         const newVolume = Math.max(0, Math.min(100, Math.round(newPosition)));
 
         if (!this.animating) {
           this.animating = true;
           requestAnimationFrame(() => {
             this.volume = newVolume;
-            this.$emit('input', this.volume);
+            this.$emit('changeVolumeValue', this.volume);
             this.animating = false;
           });
         }
       }
     },
     stopDrag() {
-      this.dragging = false;
+      if (this.dragging) {
+        this.dragging = false;
+      }
     },
   },
 };
