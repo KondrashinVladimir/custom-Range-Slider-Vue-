@@ -2,10 +2,20 @@
   <div class="slider">
     <slot name="left"></slot>
 
-    <div class="slider__container" @mousedown="startDrag" @touchstart="startDrag" @mousemove="moveHandle"
-      @touchmove="moveHandle" @mouseup="endDrag" @touchend="endDrag" ref="sliderContainer">
+    <div class="slider__container"
+         @mousedown="startDrag"
+         @touchstart="startDrag"
+         @mousemove="moveHandle"
+         @touchmove="moveHandle"
+         @mouseup="endDrag"
+         @touchend="endDrag"
+         ref="sliderContainer">
       <div class="slider__track" :style="trackStyle" ref="track"></div>
-      <div class="slider__handle" :style="{ left: volume + '%' }" ref="handle"></div>
+      <div class="slider__handle"
+           tabindex="0"
+           :style="{ left: volume + '%' }"
+           ref="handle"
+           @keydown="handleKeyDown"></div>
     </div>
 
     <slot name="right"></slot>
@@ -87,6 +97,24 @@ export default {
         this.dragging = false;
       }
     },
+    handleKeyDown(event) {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault(); // Prevent scrolling the page with arrow keys
+        const step = 1; // Adjust the step value as needed
+        let increment = 0;
+
+        if (event.key === 'ArrowLeft') {
+          increment = -step;
+        } else if (event.key === 'ArrowRight') {
+          increment = step;
+        }
+
+        const newVolume = Math.max(0, Math.min(100, this.volume + increment));
+        this.volume = newVolume;
+
+        this.$emit('changeVolumeValue', this.volume);
+      }
+    },
   },
 };
 </script>
@@ -134,6 +162,11 @@ export default {
   &:hover {
     box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.3);
     transition: all 0.2s ease-out;
+  }
+
+  &:focus-within {
+    outline: none;
+    box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.3);
   }
 
   &:active {
