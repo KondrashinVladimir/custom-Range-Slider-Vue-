@@ -80,12 +80,12 @@ export default {
       if (this.dragging) {
         const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
         const newPosition = (clientX - this.sliderRect.left) / this.sliderWidth * 100;
-        const newVolume = Math.max(0, Math.min(100, Math.round(newPosition)));
+        const newVolume = Math.max(0, Math.min(100, newPosition));
 
         if (!this.animating) {
           this.animating = true;
           requestAnimationFrame(() => {
-            this.volume = newVolume;
+            this.volume = Math.round(newVolume);
             this.$emit('changeVolumeValue', this.volume);
             this.animating = false;
           });
@@ -99,8 +99,8 @@ export default {
     },
     handleKeyDown(event) {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-        event.preventDefault(); // Prevent scrolling the page with arrow keys
-        const step = 1; // Adjust the step value as needed
+        event.preventDefault(); 
+        const step = 1; 
         let increment = 0;
 
         if (event.key === 'ArrowLeft') {
@@ -122,17 +122,18 @@ export default {
 <style scoped>
 .slider {
   display: flex;
+  flex-grow: 1;
   gap: 10px;
   align-items: center;
-  justify-content: center;
-  width: 80%;
+  justify-content: space-between;
+  width: 304px;
   margin: 20px auto;
   text-align: center;
 }
 
 .slider__container {
   position: relative;
-  width: 100%;
+  width: 176px;
   height: 10px;
   background-color: #ddd;
   border-radius: 5px;
@@ -171,6 +172,7 @@ export default {
 
   &:active {
     box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.6);
+    
   }
 }
 
