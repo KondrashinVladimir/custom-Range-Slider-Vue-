@@ -5,14 +5,10 @@
     </div>
     <RangeSlider @changeVolumeValue="changeVolumeValue" v-model="volumeValue">
       <template v-slot:right>
-        <MyButton class="my-button" @click="moveSliderRight">
-          <MyIcon class="my-icon my-icon--volume-on"></MyIcon>
-        </MyButton>
+        <MyButton class="my-button my-button--volume-on" @click="moveSliderRight"></MyButton>
       </template>
       <template v-slot:left>
-        <MyButton class="my-button" @click="moveSliderLeft">
-          <MyIcon class="my-icon my-icon--volume-off"></MyIcon>
-        </MyButton>
+        <MyButton class="my-button my-button--volume-off" @click="moveSliderLeft"></MyButton>
       </template>
     </RangeSlider>
   </div>
@@ -24,7 +20,6 @@ import RangeSlider from './components/RangeSlider.vue';
 import { Howl } from 'howler';
 import Sound from './assets/sound.wav';
 import MyButton from './components/MyButton.vue';
-import MyIcon from './components/MyIcon.vue';
 
 const volumeValue = ref(50);
 let sound = null;
@@ -39,14 +34,14 @@ const changeVolumeValue = (volume) => {
 const moveSliderRight = () => {
   volumeValue.value = 100;
   if (sound) {
-    sound.volume(1); 
+    sound.volume(1);
   }
 };
 
 const moveSliderLeft = () => {
   volumeValue.value = 0;
   if (sound) {
-    sound.volume(0); 
+    sound.volume(0);
   }
 };
 

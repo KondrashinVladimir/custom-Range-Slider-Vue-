@@ -10,7 +10,7 @@
          @mouseup="endDrag"
          @touchend="endDrag"
          ref="sliderContainer">
-      <div class="slider__track" :style="trackStyle" ref="track"></div>
+      <div class="slider__track" :style="widthStyle" ref="track"></div>
       <div class="slider__handle"
            tabindex="0"
            :style="{ left: volume + '%' }"
@@ -40,9 +40,9 @@ export default {
     };
   },
   computed: {
-    trackStyle() {
+    widthStyle() {
       return {
-        background: `linear-gradient(to right, var(--colorPrimary) ${this.volume}%, #ce9584 ${this.volume}%)`,
+        width: `${this.volume}%`,
       };
     },
   },
@@ -134,24 +134,25 @@ export default {
 .slider__container {
   position: relative;
   width: 176px;
-  height: 10px;
-  background-color: #ddd;
+  height: 8px;
+  background-color: rgba(255, 110, 64, 0.4);
   border-radius: 5px;
   cursor: pointer;
 }
 
 .slider__track {
   position: absolute;
+  background-color: var(--colorPrimary);
   top: 0;
   left: 0;
   height: 100%;
   border-radius: 5px;
-  width: 100%;
+  transition: all 0.1s ease-out;
 }
 
 .slider__handle {
   position: absolute;
-  top: -5px;
+  top: -6px;
   width: 20px;
   height: 20px;
   background-color: var(--colorPrimary);
@@ -159,21 +160,21 @@ export default {
   transform: translateX(-50%);
   cursor: pointer;
   user-select: none;
+  transition: all 0.1s ease-out;
 
   &:hover {
-    box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.3);
-    transition: all 0.2s ease-out;
+    box-shadow: 0px 0px 0px 6px rgba(255, 110, 64, 0.3);
+    transition: all 0.1s ease-out;
   }
 
   &:focus-within {
     outline: none;
-    box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.3);
+    box-shadow: 0px 0px 0px 6px rgba(255, 110, 64, 0.3);
   }
 
   &:active {
-    box-shadow: 0px 0px 0px 4px rgba(255, 110, 64, 0.6);
+    box-shadow: 0px 0px 0px 6px rgba(255, 110, 64, 0.5);
     
   }
 }
-
 </style>
