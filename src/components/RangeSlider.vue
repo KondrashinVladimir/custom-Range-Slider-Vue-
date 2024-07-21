@@ -1,121 +1,108 @@
 <template>
-  <div class="slider">
+  <div class="slider" @touchstart.prevent="startDrag">
     <slot name="left"></slot>
 
-    <div class="slider__container"
-         @mousedown="startDrag"
-         @touchstart="startDrag"
-         @mousemove="moveHandle"
-         @touchmove="moveHandle"
-         @mouseup="endDrag"
-         @touchend="endDrag"
-         ref="sliderContainer">
-      <div class="slider__track" :style="widthStyle" ref="track"></div>
-      <div class="slider__handle"
-           tabindex="0"
-           :style="{ left: volume + '%' }"
-           ref="handle"
-           @keydown="handleKeyDown"></div>
+    <div class="slider__container" @mousedown.prevent="startDrag" ref="sliderContainer">
+      <div class="slider__track" :style="widthStyle"></div>
+      <div class="slider__handle" tabindex="0" :style="{ left: volumeValue + '%' }" @keydown="handleKeyDown">
+      </div>
     </div>
 
     <slot name="right"></slot>
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    modelValue: {
-      type: Number,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      volume: this.modelValue,
-      dragging: false,
-      animating: false,
-      sliderWidth: 0,
-      sliderRect: null,
-    };
-  },
-  computed: {
-    widthStyle() {
-      return {
-        width: `${this.volume}%`,
-      };
-    },
-  },
-  watch: {
-    modelValue(newValue) {
-      this.volume = newValue;
-    },
-  },
-  mounted() {
-    this.updateSliderDimensions();
-    window.addEventListener('resize', this.updateSliderDimensions);
-    window.addEventListener('mousemove', this.moveHandle);
-    window.addEventListener('touchmove', this.moveHandle);
-    window.addEventListener('mouseup', this.stopDrag);
-    window.addEventListener('touchend', this.stopDrag);
-  },
-  beforeUnmount() {
-    window.removeEventListener('resize', this.updateSliderDimensions);
-    window.removeEventListener('mousemove', this.moveHandle);
-    window.removeEventListener('touchmove', this.moveHandle);
-    window.removeEventListener('mouseup', this.stopDrag);
-    window.removeEventListener('touchend', this.stopDrag);
-  },
-  methods: {
-    updateSliderDimensions() {
-      this.sliderWidth = this.$refs.sliderContainer.clientWidth;
-      this.sliderRect = this.$refs.sliderContainer.getBoundingClientRect();
-    },
-    startDrag(event) {
-      event.stopPropagation();
-      this.dragging = true;
-      this.moveHandle(event);
-    },
-    moveHandle(event) {
-      if (this.dragging) {
-        const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
-        const newPosition = (clientX - this.sliderRect.left) / this.sliderWidth * 100;
-        const newVolume = Math.max(0, Math.min(100, newPosition));
+<script setup>
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
-        if (!this.animating) {
-          this.animating = true;
-          requestAnimationFrame(() => {
-            this.volume = Math.round(newVolume);
-            this.$emit('changeVolumeValue', this.volume);
-            this.animating = false;
-          });
-        }
-      }
-    },
-    stopDrag() {
-      if (this.dragging) {
-        this.dragging = false;
-      }
-    },
-    handleKeyDown(event) {
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-        event.preventDefault(); 
-        const step = 1; 
-        let increment = 0;
+const volumeValue = defineModel();
+const dragging = ref(false);
+const animating = ref(false);
+const sliderWidth = ref(null);
+const sliderRect = ref(null);
+const sliderContainer = ref(null);
+const emit = defineEmits(['update:modelValue']);
 
-        if (event.key === 'ArrowLeft') {
-          increment = -step;
-        } else if (event.key === 'ArrowRight') {
-          increment = step;
-        }
+onMounted(() => {
+  updateSliderDimensions();
+  window.addEventListener('resize', updateSliderDimensions);
+});
 
-        const newVolume = Math.max(0, Math.min(100, this.volume + increment));
-        this.volume = newVolume;
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateSliderDimensions);
+});
 
-        this.$emit('changeVolumeValue', this.volume);
-      }
-    },
-  },
+const updateSliderDimensions = () => {
+  sliderWidth.value = sliderContainer.value.clientWidth;
+  sliderRect.value = sliderContainer.value.getBoundingClientRect();
+};
+
+const widthStyle = computed(() => {
+  return {
+    width: `${volumeValue.value}%`,
+  };
+});
+
+const startDrag = (event) => {
+  dragging.value = true;
+  if (event.type === 'mousedown') {
+    document.addEventListener('mousemove', moveHandle);
+    document.addEventListener('mouseup', stopDrag);
+  } else if (event.type === 'touchstart') {
+    document.addEventListener('touchmove', moveHandle);
+    document.addEventListener('touchend', stopDrag);
+  }
+  moveHandle(event);
+};
+
+const stopDrag = () => {
+  dragging.value = false;
+  document.removeEventListener('mousemove', moveHandle);
+  document.removeEventListener('mouseup', stopDrag);
+  document.removeEventListener('touchmove', moveHandle);
+  document.removeEventListener('touchend', stopDrag);
+};
+
+const moveHandle = (event) => {
+  if (dragging.value) {
+    let clientX = null;
+    if (event.type === 'mousedown' || event.type === 'mousemove') {
+      clientX = event.clientX;
+    } else if (event.type === 'touchstart' || event.type === 'touchmove') {
+      clientX = event.touches[0].clientX;
+    }
+
+    const newPosition = (clientX - sliderRect.value.left) / sliderWidth.value * 100;
+    const newVolume = Math.max(0, Math.min(100, newPosition));
+
+    if (!animating.value) {
+      animating.value = true;
+      requestAnimationFrame(() => {
+        volumeValue.value = Math.round(newVolume);
+        emit('update:modelValue', Math.round(newVolume))
+        animating.value = false;
+      });
+    }
+  }
+};
+
+const handleKeyDown = (event) => {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    const step = 1;
+    let increment = 0;
+
+    if (event.key === 'ArrowLeft') {
+      increment = -step;
+    } else if (event.key === 'ArrowRight') {
+      increment = step;
+    }
+
+    const newVolume = Math.max(0, Math.min(100, volumeValue.value + increment));
+    
+    volumeValue.value = Math.round(newVolume);
+    emit('update:modelValue', Math.round(newVolume))
+  }
 };
 </script>
 
@@ -174,7 +161,7 @@ export default {
 
   &:active {
     box-shadow: 0px 0px 0px 6px rgba(255, 110, 64, 0.5);
-    
+
   }
 }
 </style>
