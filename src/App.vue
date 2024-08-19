@@ -3,7 +3,7 @@
     <div>
       <button @click="playSound">Воспроизвести звук</button>
     </div>
-    <RangeSlider @update:modelValue="changeVolumeValue" v-model="volumeValue">
+    <RangeSlider v-model="volumeValue">
       <template v-slot:right>
         <MyButton class="my-button my-button--volume-on" @click="moveSliderRight"></MyButton>
       </template>
@@ -15,34 +15,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import RangeSlider from './components/RangeSlider.vue';
 import { Howl } from 'howler';
 import Sound from './assets/sound.wav';
 import MyButton from './components/MyButton.vue';
 
 const volumeValue = ref(50);
-
 let sound = null;
 
-const changeVolumeValue = () => {
+const changeVolumeValue = (newValue) => {
   if (sound) {
-    sound.volume(volumeValue.value / 100);
+    sound.volume(newValue / 100);
   }
 };
 
 const moveSliderLeft = () => {
   volumeValue.value = 0;
-  if (sound) {
-    sound.volume(0);
-  }
 };
 
 const moveSliderRight = () => {
   volumeValue.value = 100;
-  if (sound) {
-    sound.volume(1);
-  }
 };
 
 onMounted(() => {
@@ -50,6 +43,8 @@ onMounted(() => {
     src: [Sound],
     volume: volumeValue.value / 100
   });
+
+  watch(volumeValue, changeVolumeValue);
 });
 
 const playSound = () => {

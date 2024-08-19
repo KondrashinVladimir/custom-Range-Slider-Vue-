@@ -8,7 +8,7 @@
 
 </script>
 
-<style scoped>
+<style lang="scss">
 .my-button {
     box-sizing: border-box;
     position: relative;
@@ -24,8 +24,10 @@
     cursor: pointer;
     transition: all 0.2s ease-out;
 
-    &:hover {
+    @media (hover: hover) {
+        &:hover {
         background-color: rgba(255, 110, 64, 0.1);
+        }
     }
 
     &:focus-visible {
